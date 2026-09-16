@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>信用卡还款提醒</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 登录视图 -->
+  <div id="login-view" class="view">
+    <div class="login-card">
+      <div class="login-head">
+        <div class="logo">💳</div>
+        <h1>信用卡还款提醒</h1>
+        <p class="subtitle">多卡还款倒计时，临近自动预警</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="code">验证码登录</button>
+        <button class="tab" data-tab="password">密码登录</button>
+      </div>
+
+      <div id="tab-code" class="tab-panel">
+        <input id="login-email" type="email" placeholder="邮箱" autocomplete="email">
+        <div class="code-row">
+          <input id="login-code" type="text" placeholder="验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+          <button id="btn-send-code" class="ghost">发送验证码</button>
+        </div>
+        <button id="btn-login-code" class="primary">登录 / 注册</button>
+      </div>
+
+      <div id="tab-password" class="tab-panel hidden">
+        <input id="login-email2" type="email" placeholder="邮箱" autocomplete="email">
+        <input id="login-password" type="password" placeholder="6 位数字密码" maxlength="6" inputmode="numeric" autocomplete="current-password">
+        <button id="btn-login-password" class="primary">登录</button>
+      </div>
+
+      <div id="login-msg" class="msg"></div>
+      <p class="hint">首次登录自动注册，未注册邮箱验证码登录即建号</p>
+    </div>
+  </div>
+
+  <!-- 主视图 -->
+  <div id="main-view" class="view hidden">
+    <header>
+      <div class="brand">💳 还款提醒</div>
+      <div class="user-box">
+        <span id="user-email"></span>
+        <button id="btn-logout" class="ghost">退出</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="main-tabs">
+        <button class="main-tab active" data-view="cards">我的信用卡</button>
+        <button class="main-tab" data-view="records">还款记录</button>
+      </div>
+
+      <div id="cards-panel">
+        <div class="toolbar">
+          <h2>我的信用卡</h2>
+          <div class="toolbar-right">
+            <div class="style-switch" role="group" aria-label="卡片样式">
+              <button class="style-btn active" data-style="A" title="完整卡面：信息全铺开">方案A</button>
+              <button class="style-btn" data-style="B" title="倒计时卡面：大号剩余天数">方案B</button>
+            </div>
+            <button id="btn-add" class="primary">＋ 添加卡片</button>
+          </div>
+        </div>
+
+        <div id="summary" class="summary"></div>
+        <div id="card-list"></div>
+
+        <div id="empty-state" class="empty hidden">
+          <div class="empty-icon">🃏</div>
+          <p>还没有信用卡</p>
+          <p class="muted">点击「添加卡片」，录入还款日即可开始提醒</p>
+        </div>
+      </div>
+
+      <div id="records-panel" class="hidden">
+        <div class="filter-bar">
+          <select id="filter-card" aria-label="按卡筛选"></select>
+          <select id="filter-year" aria-label="按年筛选"></select>
+          <select id="filter-month" aria-label="按月筛选"></select>
+          <select id="filter-day" aria-label="按日筛选"></select>
+        </div>
+        <div id="records-list"></div>
+        <div id="records-empty" class="empty hidden">
+          <div class="empty-icon">📒</div>
+          <p>还没有还款记录</p>
+          <p class="muted">点卡片上的「本期已还」后，这里会记录每次还款</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 卡片表单弹层 -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-mask" id="modal-mask"></div>
+    <div class="modal-card">
+      <h3 id="modal-title">添加卡片</h3>
+      <form id="card-form" autocomplete="off">
+        <input type="hidden" id="f-id">
+
+        <label for="f-alias">卡别名 <em>*</em></label>
+        <input id="f-alias" type="text" placeholder="如：招行主卡" maxlength="30" required>
+
+        <label for="f-last4">卡号后 4 位 <em>*</em></label>
+        <input id="f-last4" type="text" placeholder="1234" maxlength="4" inputmode="numeric" pattern="\d{4}" required>
+
+        <label for="f-bank">银行（可选）</label>
+        <input id="f-bank" type="text" placeholder="如：招商银行" maxlength="30">
+
+        <div class="form-row">
+          <div>
+            <label for="f-billDay">账单日（可选）</label>
+            <input id="f-billDay" type="number" min="1" max="31" placeholder="1-31" inputmode="numeric">
+          </div>
+          <div>
+            <label for="f-payDay">还款日 <em>*</em></label>
+            <input id="f-payDay" type="number" min="1" max="31" placeholder="1-31" inputmode="numeric" required>
+          </div>
+        </div>
+
+        <p class="field-hint">还款日填「每月几号」，如每月 20 号填 20</p>
+        <p id="form-msg" class="form-msg"></p>
+
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel" class="ghost">取消</button>
+          <button type="submit" class="primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
