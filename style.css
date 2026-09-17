@@ -18,6 +18,10 @@
   --c-overdue: #ef4444;
   --c-paid: #22c55e;
 
+  --disabled-bg: #232834;
+  --disabled-border: #2e3542;
+  --disabled-text: #7d8698;
+
   --radius: 14px;
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
@@ -31,6 +35,9 @@
     --border: #e3e7ee;
     --text: #1a2233;
     --text-muted: #6b7488;
+    --disabled-bg: #eceef2;
+    --disabled-border: #d9dde4;
+    --disabled-text: #a0a8b6;
     --shadow: 0 8px 30px rgba(30, 40, 70, 0.08);
   }
 }
@@ -518,17 +525,32 @@ main {
 }
 .form-msg:empty { min-height: 0; margin: 0; }
 
-/* ---------- 导入邮箱账单（暂未开通） ---------- */
+/* ---------- 导入邮箱账单（暂未开通 · 方案C：灰底 + 未开通角标） ---------- */
 .btn-import-disabled {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 10px 16px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text-muted);
+  border: 1px solid var(--disabled-border);
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
   cursor: pointer;
-  opacity: 0.7;
   white-space: nowrap;
 }
-.btn-import-disabled:hover { opacity: 1; }
+.btn-import-disabled:hover { color: var(--text-muted); }
+.btn-import-disabled svg { flex-shrink: 0; }
+.btn-import-disabled .unavailable-badge {
+  position: absolute;
+  top: -8px;
+  right: -7px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 17px;
+  background: var(--danger);
+  color: #ffffff;
+}
 
 .bill-import-hint {
   margin: 0 0 18px;
