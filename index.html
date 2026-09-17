@@ -73,8 +73,14 @@
               <button class="style-btn active" data-style="A" title="完整卡面：信息全铺开">方案A</button>
               <button class="style-btn" data-style="B" title="倒计时卡面：大号剩余天数">方案B</button>
             </div>
+            <button id="btn-import-bill" class="btn-import-disabled" title="暂未开通，点击查看原因">📥 导入邮箱账单</button>
             <button id="btn-add" class="primary">＋ 添加卡片</button>
           </div>
+        </div>
+
+        <div id="bill-import-hint" class="bill-import-hint hidden">
+          <strong>导入账单功能暂未开通</strong>
+          <p>导入账单需要你的邮箱「授权码」，而授权码等同于邮箱的完全控制权——拿到它的人能读取、删除你的所有邮件，甚至以你的名义发信。目前还没有既能读取账单、又不触碰你其他邮件的方法，在找到更安全的方案之前，我们暂不开放此功能。</p>
         </div>
 
         <div id="summary" class="summary"></div>

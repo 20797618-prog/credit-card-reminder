@@ -528,6 +528,10 @@
   }
 
   $('#btn-add').addEventListener('click', openAdd);
+  // 导入邮箱账单（暂未开通）：点击展示安全说明，再点收起
+  $('#btn-import-bill').addEventListener('click', function () {
+    $('#bill-import-hint').classList.toggle('hidden');
+  });
   $('#btn-cancel').addEventListener('click', closeModal);
   $('#modal-mask').addEventListener('click', closeModal);
 

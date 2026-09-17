@@ -518,6 +518,42 @@ main {
 }
 .form-msg:empty { min-height: 0; margin: 0; }
 
+/* ---------- 导入邮箱账单（暂未开通） ---------- */
+.btn-import-disabled {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.btn-import-disabled:hover { opacity: 1; }
+
+.bill-import-hint {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+}
+.bill-import-hint strong {
+  display: block;
+  font-size: 14px;
+  color: var(--danger);
+  margin-bottom: 6px;
+}
+.bill-import-hint p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--danger);
+}
+
+@media (max-width: 480px) {
+  .toolbar-right { flex-wrap: wrap; justify-content: flex-end; }
+}
+
 /* ---------- 全局轻提示 toast ---------- */
 .toast {
   position: fixed;
