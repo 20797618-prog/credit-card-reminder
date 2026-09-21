@@ -17,70 +17,81 @@
 
   <!-- 登录视图 -->
   <div id="login-view" class="view">
+    <!-- 语言切换（右上角） -->
+    <div class="lang-switch" role="group" aria-label="Language / 语言">
+      <button type="button" class="lang-btn" data-lang="zh">中文</button>
+      <button type="button" class="lang-btn" data-lang="en">EN</button>
+    </div>
+
     <div class="login-card">
       <div class="login-head">
         <div class="logo">💳</div>
-        <h1>信用卡还款提醒</h1>
-        <p class="subtitle">多卡还款倒计时，临近自动预警</p>
+        <h1 data-i18n="app.title">信用卡还款提醒</h1>
+        <p class="subtitle" data-i18n="login.tagline">多卡还款倒计时，临近自动预警</p>
       </div>
 
       <div class="tabs">
-        <button class="tab active" data-tab="code">验证码登录</button>
-        <button class="tab" data-tab="password">密码登录</button>
+        <button class="tab active" data-tab="code" data-i18n="login.tabCode">验证码登录</button>
+        <button class="tab" data-tab="password" data-i18n="login.tabPassword">密码登录</button>
       </div>
 
       <div id="tab-code" class="tab-panel">
-        <input id="login-email" type="email" placeholder="邮箱" autocomplete="email">
+        <input id="login-email" type="email" data-i18n-ph="login.email" placeholder="邮箱" autocomplete="email">
         <div class="code-row">
-          <input id="login-code" type="text" placeholder="验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
-          <button id="btn-send-code" class="ghost">发送验证码</button>
+          <input id="login-code" type="text" data-i18n-ph="login.code" placeholder="验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+          <button id="btn-send-code" class="ghost" data-i18n="login.sendCode">发送验证码</button>
         </div>
-        <button id="btn-login-code" class="primary">登录 / 注册</button>
+        <button id="btn-login-code" class="primary" data-i18n="login.signIn">登录 / 注册</button>
       </div>
 
       <div id="tab-password" class="tab-panel hidden">
-        <input id="login-email2" type="email" placeholder="邮箱" autocomplete="email">
-        <input id="login-password" type="password" placeholder="6 位数字密码" maxlength="6" inputmode="numeric" autocomplete="current-password">
-        <button id="btn-login-password" class="primary">登录</button>
+        <input id="login-email2" type="email" data-i18n-ph="login.email" placeholder="邮箱" autocomplete="email">
+        <input id="login-password" type="password" data-i18n-ph="login.password" placeholder="6 位数字密码" maxlength="6" inputmode="numeric" autocomplete="current-password">
+        <button id="btn-login-password" class="primary" data-i18n="login.signInOnly">登录</button>
       </div>
 
       <div id="login-msg" class="msg"></div>
-      <p class="hint">首次登录自动注册，未注册邮箱验证码登录即建号</p>
+      <p class="hint" data-i18n="login.hint">首次登录自动注册，未注册邮箱验证码登录即建号</p>
     </div>
   </div>
 
   <!-- 主视图 -->
   <div id="main-view" class="view hidden">
     <header>
-      <div class="brand">💳 还款提醒</div>
+      <div class="brand" data-i18n="app.brand">💳 还款提醒</div>
       <div class="user-box">
         <span id="user-email"></span>
-        <button id="btn-logout" class="ghost">退出</button>
+        <!-- 语言切换（右上角） -->
+        <div class="lang-switch" role="group" aria-label="Language / 语言">
+          <button type="button" class="lang-btn" data-lang="zh">中文</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <button id="btn-logout" class="ghost" data-i18n="header.logout">退出</button>
       </div>
     </header>
 
     <main>
       <div class="main-tabs">
-        <button class="main-tab active" data-view="cards">我的信用卡</button>
-        <button class="main-tab" data-view="records">还款记录</button>
+        <button class="main-tab active" data-view="cards" data-i18n="nav.cards">我的信用卡</button>
+        <button class="main-tab" data-view="records" data-i18n="nav.records">还款记录</button>
       </div>
 
       <div id="cards-panel">
         <div class="toolbar">
-          <h2>我的信用卡</h2>
+          <h2 data-i18n="cards.title">我的信用卡</h2>
           <div class="toolbar-right">
-            <div class="style-switch" role="group" aria-label="卡片样式">
-              <button class="style-btn active" data-style="A" title="完整卡面：信息全铺开">方案A</button>
-              <button class="style-btn" data-style="B" title="倒计时卡面：大号剩余天数">方案B</button>
+            <div class="style-switch" role="group" data-i18n-aria="style.ariaLabel" aria-label="卡片样式">
+              <button class="style-btn active" data-style="A" data-i18n="style.a" data-i18n-title="style.aTitle" title="完整卡面：信息全铺开">方案A</button>
+              <button class="style-btn" data-style="B" data-i18n="style.b" data-i18n-title="style.bTitle" title="倒计时卡面：大号剩余天数">方案B</button>
             </div>
-            <button id="btn-import-bill" class="btn-import-disabled" title="暂未开通，点击查看原因"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>导入邮箱账单<span class="unavailable-badge">未开通</span></button>
-            <button id="btn-add" class="primary">＋ 添加卡片</button>
+            <button id="btn-import-bill" class="btn-import-disabled" data-i18n-title="import.buttonTitle" title="暂未开通，点击查看原因"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg><span data-i18n="import.button">导入邮箱账单</span><span class="unavailable-badge" data-i18n="import.badge">未开通</span></button>
+            <button id="btn-add" class="primary" data-i18n="btn.add">＋ 添加卡片</button>
           </div>
         </div>
 
         <div id="bill-import-hint" class="bill-import-hint hidden">
-          <strong>导入账单功能暂未开通</strong>
-          <p>导入账单需要你的邮箱「授权码」，而授权码等同于邮箱的完全控制权——拿到它的人能读取、删除你的所有邮件，甚至以你的名义发信。目前还没有既能读取账单、又不触碰你其他邮件的方法，在找到更安全的方案之前，我们暂不开放此功能。</p>
+          <strong data-i18n="import.head">导入账单功能暂未开通</strong>
+          <p data-i18n="import.body">导入账单需要你的邮箱「授权码」，而授权码等同于邮箱的完全控制权——拿到它的人能读取、删除你的所有邮件，甚至以你的名义发信。目前还没有既能读取账单、又不触碰你其他邮件的方法，在找到更安全的方案之前，我们暂不开放此功能。</p>
         </div>
 
         <div id="summary" class="summary"></div>
@@ -88,23 +99,23 @@
 
         <div id="empty-state" class="empty hidden">
           <div class="empty-icon">🃏</div>
-          <p>还没有信用卡</p>
-          <p class="muted">点击「添加卡片」，录入还款日即可开始提醒</p>
+          <p data-i18n="empty.cards.title">还没有信用卡</p>
+          <p class="muted" data-i18n="empty.cards.desc">点击「添加卡片」，录入还款日即可开始提醒</p>
         </div>
       </div>
 
       <div id="records-panel" class="hidden">
         <div class="filter-bar">
-          <select id="filter-card" aria-label="按卡筛选"></select>
-          <select id="filter-year" aria-label="按年筛选"></select>
-          <select id="filter-month" aria-label="按月筛选"></select>
-          <select id="filter-day" aria-label="按日筛选"></select>
+          <select id="filter-card" data-i18n-aria="filter.byCard" aria-label="按卡筛选"></select>
+          <select id="filter-year" data-i18n-aria="filter.byYear" aria-label="按年筛选"></select>
+          <select id="filter-month" data-i18n-aria="filter.byMonth" aria-label="按月筛选"></select>
+          <select id="filter-day" data-i18n-aria="filter.byDay" aria-label="按日筛选"></select>
         </div>
         <div id="records-list"></div>
         <div id="records-empty" class="empty hidden">
           <div class="empty-icon">📒</div>
-          <p>还没有还款记录</p>
-          <p class="muted">点卡片上的「本期已还」后，这里会记录每次还款</p>
+          <p data-i18n="empty.records.title">还没有还款记录</p>
+          <p class="muted" data-i18n="empty.records.desc">点卡片上的「本期已还」后，这里会记录每次还款</p>
         </div>
       </div>
     </main>
@@ -118,37 +129,38 @@
       <form id="card-form" autocomplete="off">
         <input type="hidden" id="f-id">
 
-        <label for="f-alias">卡别名 <em>*</em></label>
-        <input id="f-alias" type="text" placeholder="如：招行主卡" maxlength="30" required>
+        <label for="f-alias"><span data-i18n="form.alias">卡别名</span> <em>*</em></label>
+        <input id="f-alias" type="text" data-i18n-ph="form.aliasPh" placeholder="如：招行主卡" maxlength="30" required>
 
-        <label for="f-last4">卡号后 4 位 <em>*</em></label>
+        <label for="f-last4"><span data-i18n="form.last4">卡号后 4 位</span> <em>*</em></label>
         <input id="f-last4" type="text" placeholder="1234" maxlength="4" inputmode="numeric" pattern="\d{4}" required>
 
-        <label for="f-bank">银行（可选）</label>
-        <input id="f-bank" type="text" placeholder="如：招商银行" maxlength="30">
+        <label for="f-bank" data-i18n="form.bank">银行（可选）</label>
+        <input id="f-bank" type="text" data-i18n-ph="form.bankPh" placeholder="如：招商银行" maxlength="30">
 
         <div class="form-row">
           <div>
-            <label for="f-billDay">账单日（可选）</label>
+            <label for="f-billDay" data-i18n="form.billDay">账单日（可选）</label>
             <input id="f-billDay" type="number" min="1" max="31" placeholder="1-31" inputmode="numeric">
           </div>
           <div>
-            <label for="f-payDay">还款日 <em>*</em></label>
+            <label for="f-payDay"><span data-i18n="form.payDay">还款日</span> <em>*</em></label>
             <input id="f-payDay" type="number" min="1" max="31" placeholder="1-31" inputmode="numeric" required>
           </div>
         </div>
 
-        <p class="field-hint">还款日填「每月几号」，如每月 20 号填 20</p>
+        <p class="field-hint" data-i18n="form.hint">还款日填「每月几号」，如每月 20 号填 20</p>
         <p id="form-msg" class="form-msg"></p>
 
         <div class="modal-actions">
-          <button type="button" id="btn-cancel" class="ghost">取消</button>
-          <button type="submit" class="primary">保存</button>
+          <button type="button" id="btn-cancel" class="ghost" data-i18n="form.cancel">取消</button>
+          <button type="submit" class="primary" data-i18n="form.save">保存</button>
         </div>
       </form>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="auth.js"></script>
   <script src="app.js"></script>
   <script>

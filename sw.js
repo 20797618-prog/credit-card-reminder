@@ -2,12 +2,13 @@
 // 策略：network-first + 缓存兜底（离线也能打开）；/api/ 一律走网络不缓存。
 // 版本号 CACHE 变更后，旧缓存会在 activate 时被清空。
 
-const CACHE = 'ccr-v2';
+const CACHE = 'ccr-v3';
 const ASSETS = [
   '/',
   '/style.css',
   '/app.js',
   '/auth.js',
+  '/i18n.js',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',

@@ -130,22 +130,27 @@ export async function saveCards(env, email, cards) {
 
 // ---------- 字段校验 ----------
 
-// 返回 { error } 或 { value }
+// 返回 { error, code } 或 { value }
+// code 供前端做多语言映射（error 保留中文原文，兼容旧调用方）
 export function validateCard(body) {
   const alias = String(body && body.alias || '').trim();
-  if (!alias) return { error: '卡别名不能为空' };
-  if (alias.length > 30) return { error: '卡别名不能超过30字' };
+  if (!alias) return { error: '卡别名不能为空', code: 'alias_empty' };
+  if (alias.length > 30) return { error: '卡别名不能超过30字', code: 'alias_long' };
 
   const last4 = String(body && body.last4 || '').trim();
-  if (!/^\d{4}$/.test(last4)) return { error: '卡号后4位必须是4位数字' };
+  if (!/^\d{4}$/.test(last4)) return { error: '卡号后4位必须是4位数字', code: 'last4_invalid' };
 
   const payDay = Number(body && body.payDay);
-  if (!Number.isInteger(payDay) || payDay < 1 || payDay > 31) return { error: '还款日必须是1-31的整数' };
+  if (!Number.isInteger(payDay) || payDay < 1 || payDay > 31) {
+    return { error: '还款日必须是1-31的整数', code: 'payday_invalid' };
+  }
 
   let billDay = null;
   if (body && body.billDay !== undefined && body.billDay !== null && body.billDay !== '') {
     billDay = Number(body.billDay);
-    if (!Number.isInteger(billDay) || billDay < 1 || billDay > 31) return { error: '账单日必须是1-31的整数' };
+    if (!Number.isInteger(billDay) || billDay < 1 || billDay > 31) {
+      return { error: '账单日必须是1-31的整数', code: 'billday_invalid' };
+    }
   }
 
   const bank = String(body && body.bank || '').trim().slice(0, 30);

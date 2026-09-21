@@ -5,10 +5,12 @@ import { getCards } from '../_cards_lib.js';
 export async function onRequest(context) {
   const { request, env } = context;
   if (request.method === 'OPTIONS') return handleOptions();
-  if (request.method !== 'GET') return json({ ok: false, error: 'method not allowed' }, 405);
+  if (request.method !== 'GET') {
+    return json({ ok: false, error: 'method_not_allowed', message: '不支持的请求方法' }, 405);
+  }
 
   const sess = await resolveSession(request, env);
-  if (!sess) return json({ ok: false, error: 'unauthorized' }, 401);
+  if (!sess) return json({ ok: false, error: 'unauthorized', message: '请先登录' }, 401);
 
   const cards = await getCards(env, sess.email);
   const records = [];

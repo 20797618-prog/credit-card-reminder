@@ -41,6 +41,8 @@
         if (res.status === 401) {
             var err401 = new Error((data && data.message) || '登录已过期');
             err401.status = 401;
+            // 附带原始响应，便于业务层按 error 码做多语言映射（如 bad_code）
+            err401.data = data;
             throw err401;
         }
         if (!res.ok) {

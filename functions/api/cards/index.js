@@ -14,7 +14,7 @@ export async function onRequest(context) {
   if (request.method === 'OPTIONS') return handleOptions();
 
   const sess = await resolveSession(request, env);
-  if (!sess) return json({ ok: false, error: 'unauthorized' }, 401);
+  if (!sess) return json({ ok: false, error: 'unauthorized', message: '请先登录' }, 401);
 
   if (request.method === 'GET') {
     const base = today();
@@ -27,9 +27,11 @@ export async function onRequest(context) {
 
   if (request.method === 'POST') {
     let body;
-    try { body = await request.json(); } catch (e) { return json({ ok: false, error: 'invalid json' }, 400); }
+    try { body = await request.json(); } catch (e) {
+      return json({ ok: false, error: 'invalid_json', message: '请求格式错误' }, 400);
+    }
     const v = validateCard(body);
-    if (v.error) return json({ ok: false, error: v.error }, 400);
+    if (v.error) return json({ ok: false, error: v.code, message: v.error }, 400);
 
     const cards = await getCards(env, sess.email);
     const now = Date.now();
@@ -47,5 +49,5 @@ export async function onRequest(context) {
     return json({ ok: true, card: { ...card, ...computeStatus(card, base) } });
   }
 
-  return json({ ok: false, error: 'method not allowed' }, 405);
+  return json({ ok: false, error: 'method_not_allowed', message: '不支持的请求方法' }, 405);
 }

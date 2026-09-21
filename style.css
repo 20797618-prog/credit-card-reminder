@@ -102,10 +102,17 @@ input::placeholder { color: var(--text-muted); }
 .view { min-height: 100vh; }
 
 #login-view {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
+}
+/* 登录页的语言切换固定在右上角 */
+#login-view > .lang-switch {
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 
 .login-card {
@@ -212,6 +219,33 @@ main {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* 语言切换（登录页右上角 + 主视图 header 右上角共用） */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 2px;
+}
+.lang-btn {
+  padding: 5px 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: 7px;
+  letter-spacing: 0.02em;
+}
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active {
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 /* 主视图 tab 导航 */
 .main-tabs {
   display: flex;
@@ -286,10 +320,26 @@ main {
 .card-face.compact {
   flex: 0 0 210px;
 }
-.face-top { display: flex; align-items: center; justify-content: space-between; }
-.face-bank { font-size: 13px; font-weight: 600; opacity: 0.92; letter-spacing: 0.4px; }
-.face-logo { font-size: 20px; opacity: 0.9; line-height: 1; }
-.face-alias { font-size: 17px; font-weight: 700; margin-top: 6px; }
+.face-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.face-bank {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.92;
+  letter-spacing: 0.4px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.face-logo { font-size: 20px; opacity: 0.9; line-height: 1; flex-shrink: 0; }
+.face-alias {
+  font-size: 17px;
+  font-weight: 700;
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .face-number {
   font-size: 15px;
   letter-spacing: 2px;
@@ -360,7 +410,7 @@ main {
 .countdown-label.urgent { color: var(--c-urgent); }
 .countdown-label.overdue { color: var(--c-overdue); }
 
-.card-actions { display: flex; align-items: center; gap: 8px; }
+.card-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 .btn-paid {
   background: transparent;
@@ -506,6 +556,10 @@ main {
 @media (max-width: 480px) {
   header { padding: 12px 14px; }
   #user-email { display: none; }
+  .brand { font-size: 14px; }
+  .user-box { gap: 8px; }
+  .lang-btn { padding: 5px 8px; font-size: 11px; }
+  #login-view > .lang-switch { top: 14px; right: 14px; }
   main { padding: 18px 14px 48px; }
   .toolbar { flex-wrap: wrap; }
   .card.style-a,
@@ -574,6 +628,9 @@ main {
 
 @media (max-width: 480px) {
   .toolbar-right { flex-wrap: wrap; justify-content: flex-end; }
+  /* 英文角标更长；窄屏收进按钮内，避免顶出容器造成横向溢出。
+     必须放在基础样式 .btn-import-disabled .unavailable-badge 之后，否则同优先级下会被覆盖。 */
+  .btn-import-disabled .unavailable-badge { right: 0; top: -7px; }
 }
 
 /* ---------- 全局轻提示 toast ---------- */

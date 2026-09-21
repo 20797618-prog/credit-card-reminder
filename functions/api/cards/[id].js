@@ -8,18 +8,20 @@ export async function onRequest(context) {
   if (request.method === 'OPTIONS') return handleOptions();
 
   const sess = await resolveSession(request, env);
-  if (!sess) return json({ ok: false, error: 'unauthorized' }, 401);
+  if (!sess) return json({ ok: false, error: 'unauthorized', message: '请先登录' }, 401);
 
   const id = params.id;
   const cards = await getCards(env, sess.email);
   const idx = cards.findIndex((c) => c.id === id);
-  if (idx === -1) return json({ ok: false, error: 'card not found' }, 404);
+  if (idx === -1) return json({ ok: false, error: 'card_not_found', message: '卡片不存在' }, 404);
 
   if (request.method === 'PUT') {
     let body;
-    try { body = await request.json(); } catch (e) { return json({ ok: false, error: 'invalid json' }, 400); }
+    try { body = await request.json(); } catch (e) {
+      return json({ ok: false, error: 'invalid_json', message: '请求格式错误' }, 400);
+    }
     const v = validateCard(body);
-    if (v.error) return json({ ok: false, error: v.error }, 400);
+    if (v.error) return json({ ok: false, error: v.code, message: v.error }, 400);
 
     const old = cards[idx];
     const merged = {
@@ -45,5 +47,5 @@ export async function onRequest(context) {
     return json({ ok: true });
   }
 
-  return json({ ok: false, error: 'method not allowed' }, 405);
+  return json({ ok: false, error: 'method_not_allowed', message: '不支持的请求方法' }, 405);
 }

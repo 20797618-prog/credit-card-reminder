@@ -1,10 +1,12 @@
 // 信用卡还款提醒器 · 前端业务逻辑
-// 依赖：auth.js（AccountAuth）、后端 /api/cards 接口
+// 依赖：i18n.js（I18N）、auth.js（AccountAuth）、后端 /api/cards 接口
 (function () {
   'use strict';
 
   // ---------- 工具 ----------
   function $(sel) { return document.querySelector(sel); }
+  function t(key, params) { return I18N.t(key, params); }
+  function tp(key, n, params) { return I18N.tp(key, n, params); }
 
   function escapeHtml(s) {
     return String(s == null ? '' : s)
@@ -15,22 +17,19 @@
       .replace(/'/g, '&#39;');
   }
 
-  // "2026-09-20" -> "2026年9月"（用于卡片上的本期期数）
-  function fmtPeriod(ds) {
-    if (!ds) return '';
-    return Number(ds.slice(0, 4)) + '年' + Number(ds.slice(5, 7)) + '月';
-  }
-  // "2026-09-20" -> "2026年9月20日"
-  function fmtDateCn(ds) {
-    if (!ds) return '';
-    return Number(ds.slice(0, 4)) + '年' + Number(ds.slice(5, 7)) + '月' + Number(ds.slice(8, 10)) + '日';
-  }
   // 取日期串的年/月/日数字（part: 'y' | 'm' | 'd'）
   function ymd(s, part) {
     if (!s) return null;
     const p = String(s).split('-');
     if (p.length < 3) return null;
     return Number(part === 'y' ? p[0] : part === 'm' ? p[1] : p[2]);
+  }
+
+  // 错误 -> 当前语言文案（后端带 code 时优先查词典）
+  function errMsg(e) {
+    if (e && e.data) return I18N.errorText(e.data);
+    if (e && e.status === 401) return t('err.session');
+    return (e && e.message) || t('err.generic');
   }
 
   // ---------- 轻提示（预览面板会拦截 alert，统一用页内 toast） ----------
@@ -60,9 +59,17 @@
     try { data = await res.json(); } catch (e) {}
     if (res.status === 401) {
       showLogin();
-      throw new Error((data && data.error) || '登录已过期，请重新登录');
+      const err = new Error(I18N.errorText(data) || t('err.session'));
+      err.status = 401;
+      err.data = data;
+      throw err;
     }
-    if (!res.ok) throw new Error((data && data.error) || '请求失败');
+    if (!res.ok) {
+      const err = new Error(I18N.errorText(data));
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
     return data;
   }
 
@@ -81,11 +88,11 @@
 
   // ---------- 登录 ----------
   const tabs = document.querySelectorAll('.tab');
-  tabs.forEach(function (t) {
-    t.addEventListener('click', function () {
+  tabs.forEach(function (el) {
+    el.addEventListener('click', function () {
       tabs.forEach(function (x) { x.classList.remove('active'); });
-      t.classList.add('active');
-      const tab = t.getAttribute('data-tab');
+      el.classList.add('active');
+      const tab = el.getAttribute('data-tab');
       $('#tab-code').classList.toggle('hidden', tab !== 'code');
       $('#tab-password').classList.toggle('hidden', tab !== 'password');
       setMsg('');
@@ -102,13 +109,13 @@
   let countdownTimer = null;
   $('#btn-send-code').addEventListener('click', async function () {
     const email = $('#login-email').value.trim();
-    if (!email) { setMsg('请先填写邮箱', true); return; }
+    if (!email) { setMsg(t('err.needEmail'), true); return; }
     const btn = $('#btn-send-code');
     try {
       btn.disabled = true;
       const r = await AccountAuth.requestCode(email);
-      if (r && r.dev) setMsg('开发模式，验证码：' + (r.code || ''), false);
-      else setMsg('验证码已发送，请查收邮箱', false);
+      if (r && r.dev) setMsg(t('login.devCode', { code: r.code || '' }), false);
+      else setMsg(t('login.codeSent'), false);
       let left = 60;
       btn.textContent = left + 's';
       countdownTimer = setInterval(function () {
@@ -116,38 +123,38 @@
         if (left <= 0) {
           clearInterval(countdownTimer);
           btn.disabled = false;
-          btn.textContent = '发送验证码';
+          btn.textContent = t('login.sendCode');
         } else {
           btn.textContent = left + 's';
         }
       }, 1000);
     } catch (e) {
       btn.disabled = false;
-      setMsg(e.message, true);
+      setMsg(errMsg(e), true);
     }
   });
 
   $('#btn-login-code').addEventListener('click', async function () {
     const email = $('#login-email').value.trim();
     const code = $('#login-code').value.trim();
-    if (!email || !code) { setMsg('请填写邮箱和验证码', true); return; }
+    if (!email || !code) { setMsg(t('err.needEmailCode'), true); return; }
     try {
       await AccountAuth.verifyCode(email, code);
       enterApp();
     } catch (e) {
-      setMsg(e.message, true);
+      setMsg(errMsg(e), true);
     }
   });
 
   $('#btn-login-password').addEventListener('click', async function () {
     const email = $('#login-email2').value.trim();
     const password = $('#login-password').value.trim();
-    if (!email || !password) { setMsg('请填写邮箱和密码', true); return; }
+    if (!email || !password) { setMsg(t('err.needEmailPass'), true); return; }
     try {
       await AccountAuth.loginPassword(email, password);
       enterApp();
     } catch (e) {
-      setMsg(e.message, true);
+      setMsg(errMsg(e), true);
     }
   });
 
@@ -169,15 +176,18 @@
   function statusMeta(card) {
     switch (card.status) {
       case 'overdue':
-        return { cls: 'overdue', text: '已逾期 ' + card.overdueDays + ' 天' };
+        return { cls: 'overdue', text: tp('status.overdue', card.overdueDays) };
       case 'urgent':
-        return { cls: 'urgent', text: card.daysLeft === 0 ? '今天到期' : '剩 ' + card.daysLeft + ' 天' };
+        return {
+          cls: 'urgent',
+          text: card.daysLeft === 0 ? t('status.dueToday') : tp('status.dueIn', card.daysLeft)
+        };
       case 'warning':
-        return { cls: 'warning', text: '剩 ' + card.daysLeft + ' 天' };
+        return { cls: 'warning', text: tp('status.dueIn', card.daysLeft) };
       case 'paid':
-        return { cls: 'paid', text: '已还 · ' + card.daysLeft + ' 天后下期' };
+        return { cls: 'paid', text: tp('status.paidNext', card.daysLeft) };
       default:
-        return { cls: 'normal', text: '剩 ' + card.daysLeft + ' 天' };
+        return { cls: 'normal', text: tp('status.dueIn', card.daysLeft) };
     }
   }
 
@@ -187,25 +197,26 @@
 
   // 方案 B 的大号倒计时数字
   function countdown(c) {
-    if (c.status === 'overdue') return { num: c.overdueDays, unit: '天' };
-    return { num: c.daysLeft, unit: '天' };
+    const n = c.status === 'overdue' ? c.overdueDays : c.daysLeft;
+    return { num: n, unit: tp('countdown.unit', n) };
   }
 
   // 三枚操作按钮（两方案共用）
   function cardActionsHtml(c) {
     return '<div class="card-actions">' +
-      '<button class="btn-paid" data-act="paid" data-id="' + c.id + '">本期已还</button>' +
-      '<button class="btn-mini" data-act="edit" data-id="' + c.id + '">编辑</button>' +
-      '<button class="btn-mini danger" data-act="del" data-id="' + c.id + '">删除</button>' +
+      '<button class="btn-paid" data-act="paid" data-id="' + c.id + '">' + t('card.actionPaid') + '</button>' +
+      '<button class="btn-mini" data-act="edit" data-id="' + c.id + '">' + t('card.actionEdit') + '</button>' +
+      '<button class="btn-mini danger" data-act="del" data-id="' + c.id + '">' + t('card.actionDelete') + '</button>' +
     '</div>';
   }
 
   // 方案 A：完整卡面（银行/别名/尾号/账单日/还款日）+ 右侧状态与操作
   function renderCardA(c) {
     const m = statusMeta(c);
-    const bank = c.bank ? escapeHtml(c.bank) : '信用卡';
-    const billDay = c.billDay ? (c.billDay + ' 号') : '—';
-    const period = c.nextDueDate ? '<div class="card-period">本期 ' + fmtPeriod(c.nextDueDate) + '</div>' : '';
+    const bank = c.bank ? escapeHtml(c.bank) : t('card.bankFallback');
+    const billDay = c.billDay ? I18N.dayLabel(c.billDay) : '—';
+    const period = c.nextDueDate
+      ? '<div class="card-period">' + t('card.period', { p: I18N.period(c.nextDueDate) }) + '</div>' : '';
     return '' +
       '<div class="card style-a ' + m.cls + '">' +
         '<div class="card-face">' +
@@ -216,8 +227,8 @@
           '<div class="face-alias">' + escapeHtml(c.alias) + '</div>' +
           '<div class="face-number">•••• •••• •••• ' + escapeHtml(c.last4) + '</div>' +
           '<div class="face-bottom">' +
-            '<div class="face-field"><span>账单日</span><b>' + billDay + '</b></div>' +
-            '<div class="face-field"><span>还款日</span><b>' + c.payDay + ' 号</b></div>' +
+            '<div class="face-field"><span>' + t('card.statementLabel') + '</span><b>' + billDay + '</b></div>' +
+            '<div class="face-field"><span>' + t('card.dueLabel') + '</span><b>' + I18N.dayLabel(c.payDay) + '</b></div>' +
           '</div>' +
         '</div>' +
         '<div class="card-side">' +
@@ -233,13 +244,14 @@
   // 方案 B：简洁卡面 + 右侧大号倒计时焦点
   function renderCardB(c) {
     const m = statusMeta(c);
-    const bank = c.bank ? escapeHtml(c.bank) : '信用卡';
+    const bank = c.bank ? escapeHtml(c.bank) : t('card.bankFallback');
     const cd = countdown(c);
     // 大数字已表达天数，label 只做语义说明，避免重复
-    const label = c.status === 'overdue' ? '已逾期'
-      : (c.status === 'urgent' && c.daysLeft === 0) ? '今天到期'
-      : '距应还日';
-    const period = c.nextDueDate ? '<div class="card-period">本期 ' + fmtPeriod(c.nextDueDate) + '</div>' : '';
+    const label = c.status === 'overdue' ? t('countdown.overdue')
+      : (c.status === 'urgent' && c.daysLeft === 0) ? t('countdown.today')
+      : t('countdown.due');
+    const period = c.nextDueDate
+      ? '<div class="card-period">' + t('card.period', { p: I18N.period(c.nextDueDate) }) + '</div>' : '';
     return '' +
       '<div class="card style-b ' + m.cls + '">' +
         '<div class="card-face compact">' +
@@ -248,7 +260,8 @@
             '<span class="face-logo">💳</span>' +
           '</div>' +
           '<div class="face-number">•••• ' + escapeHtml(c.last4) + '</div>' +
-          '<div class="face-field"><span>还款日</span><b>每月 ' + c.payDay + ' 号</b></div>' +
+          '<div class="face-field"><span>' + t('card.dueLabel') + '</span><b>' +
+            t('card.monthlyOn', { d: I18N.dayLabel(c.payDay) }) + '</b></div>' +
         '</div>' +
         '<div class="card-side">' +
           '<div class="countdown ' + m.cls + '">' +
@@ -283,8 +296,8 @@
     let summaryHtml = '';
     if (overdue || soon) {
       const parts = [];
-      if (overdue) parts.push('<span class="sum-overdue">' + overdue + ' 张已逾期</span>');
-      if (soon) parts.push('<span class="sum-soon">' + soon + ' 张临近还款</span>');
+      if (overdue) parts.push('<span class="sum-overdue">' + tp('summary.overdue', overdue) + '</span>');
+      if (soon) parts.push('<span class="sum-soon">' + tp('summary.soon', soon) + '</span>');
       summaryHtml = '<div class="summary-alert">' + parts.join('　') + '</div>';
     }
     summaryEl.innerHTML = summaryHtml;
@@ -315,7 +328,7 @@
       const data = await api('/api/cards');
       renderCards(data.cards || []);
     } catch (e) {
-      if (AccountAuth.isLoggedIn()) toast(e.message, true);
+      if (AccountAuth.isLoggedIn()) toast(errMsg(e), true);
     }
   }
 
@@ -329,9 +342,9 @@
     if (act === 'paid') {
       try {
         await api('/api/cards/' + id + '/paid', { method: 'POST' });
-        toast('已记录本期还款');
+        toast(t('toast.paidRecorded'));
         loadCards();
-      } catch (e) { toast(e.message, true); }
+      } catch (e) { toast(errMsg(e), true); }
     } else if (act === 'edit') {
       openEdit(id);
     } else if (act === 'del') {
@@ -339,7 +352,7 @@
       if (btn.getAttribute('data-confirm') !== '1') {
         btn.setAttribute('data-confirm', '1');
         const orig = btn.textContent;
-        btn.textContent = '确认删除';
+        btn.textContent = t('card.confirmDelete');
         btn.classList.add('confirming');
         setTimeout(function () {
           btn.removeAttribute('data-confirm');
@@ -350,18 +363,18 @@
       }
       try {
         await api('/api/cards/' + id, { method: 'DELETE' });
-        toast('已删除');
+        toast(t('toast.deleted'));
         loadCards();
-      } catch (e) { toast(e.message, true); }
+      } catch (e) { toast(errMsg(e), true); }
     }
   });
 
   // ---------- 主视图 tab 切换 ----------
-  document.querySelectorAll('.main-tab').forEach(function (t) {
-    t.addEventListener('click', function () {
+  document.querySelectorAll('.main-tab').forEach(function (el) {
+    el.addEventListener('click', function () {
       document.querySelectorAll('.main-tab').forEach(function (x) { x.classList.remove('active'); });
-      t.classList.add('active');
-      const v = t.getAttribute('data-view');
+      el.classList.add('active');
+      const v = el.getAttribute('data-view');
       $('#cards-panel').classList.toggle('hidden', v !== 'cards');
       $('#records-panel').classList.toggle('hidden', v !== 'records');
       if (v === 'records') loadRepayments();
@@ -376,11 +389,14 @@
     return Array.from(new Set(arr.filter(function (v) { return v != null; })));
   }
 
-  function fillSelect(sel, values, allLabel, suffix) {
+  // labelOf 可选：用于「值 -> 显示文案」不一致的场景（如月份 9 显示为 September）
+  function fillSelect(sel, values, allLabel, labelOf) {
+    if (!sel) return;
     const cur = sel.value;
-    sel.innerHTML = '<option value="">' + allLabel + '</option>' +
+    sel.innerHTML = '<option value="">' + escapeHtml(allLabel) + '</option>' +
       values.map(function (v) {
-        return '<option value="' + v + '">' + v + (suffix || '') + '</option>';
+        return '<option value="' + escapeHtml(v) + '">' +
+          escapeHtml(labelOf ? labelOf(v) : v) + '</option>';
       }).join('');
     if (Array.prototype.some.call(sel.options, function (o) { return o.value === cur; })) {
       sel.value = cur;
@@ -397,7 +413,7 @@
       if (!map[r.cardId]) map[r.cardId] = r.alias;
     });
     const ids = Object.keys(map);
-    sel.innerHTML = '<option value="">全部卡片</option>' +
+    sel.innerHTML = '<option value="">' + escapeHtml(t('filter.allCards')) + '</option>' +
       ids.map(function (id) {
         return '<option value="' + escapeHtml(id) + '">' + escapeHtml(map[id]) + '</option>';
       }).join('');
@@ -410,13 +426,13 @@
 
     const years = uniq(records.map(function (r) { return ymd(r.paidAt, 'y'); }))
       .sort(function (a, b) { return b - a; });
-    fillSelect($('#filter-year'), years, '全部年份', '年');
+    fillSelect($('#filter-year'), years, t('filter.allYears'), I18N.yearName);
 
     const months = uniq(records.filter(function (r) { return !y || ymd(r.paidAt, 'y') === y; })
       .map(function (r) { return ymd(r.paidAt, 'm'); }))
       .sort(function (a, b) { return b - a; });
     if (filter.month && months.indexOf(Number(filter.month)) === -1) filter.month = '';
-    fillSelect($('#filter-month'), months, '全部月份', '月');
+    fillSelect($('#filter-month'), months, t('filter.allMonths'), I18N.monthName);
 
     const m = filter.month ? Number(filter.month) : null;
     const days = uniq(records.filter(function (r) {
@@ -424,7 +440,7 @@
     }).map(function (r) { return ymd(r.paidAt, 'd'); }))
       .sort(function (a, b) { return b - a; });
     if (filter.day && days.indexOf(Number(filter.day)) === -1) filter.day = '';
-    fillSelect($('#filter-day'), days, '全部日期', '日');
+    fillSelect($('#filter-day'), days, t('filter.allDays'), I18N.dayName);
   }
 
   function applyFilter() {
@@ -453,11 +469,14 @@
         '<div class="record">' +
           '<div class="record-head">' +
             '<span class="record-alias">' + escapeHtml(r.alias) + '</span>' +
-            '<span class="record-sub">' + bank + '尾号 ' + escapeHtml(r.last4) + '</span>' +
+            '<span class="record-sub">' + bank +
+              '<span>' + t('record.ending', { n: escapeHtml(r.last4) }) + '</span></span>' +
           '</div>' +
           '<div class="record-body">' +
-            '<div class="record-line"><span>应还日</span><b>' + fmtDateCn(r.dueDate) + '</b></div>' +
-            '<div class="record-line"><span>还款日</span><b>' + fmtDateCn(r.paidAt) + '</b></div>' +
+            '<div class="record-line"><span>' + t('record.dueDate') + '</span><b>' +
+              I18N.date(r.dueDate) + '</b></div>' +
+            '<div class="record-line"><span>' + t('record.paidOn') + '</span><b>' +
+              I18N.date(r.paidAt) + '</b></div>' +
           '</div>' +
         '</div>';
     }).join('');
@@ -471,7 +490,7 @@
       rebuildFilters();
       applyFilter();
     } catch (e) {
-      if (AccountAuth.isLoggedIn()) toast(e.message, true);
+      if (AccountAuth.isLoggedIn()) toast(errMsg(e), true);
     }
   }
 
@@ -500,9 +519,11 @@
 
   function openAdd() {
     editingId = null;
-    $('#modal-title').textContent = '添加卡片';
+    $('#modal-title').textContent = t('modal.addTitle');
     $('#card-form').reset();
     $('#f-id').value = '';
+    const msgEl = $('#form-msg');
+    if (msgEl) { msgEl.textContent = ''; msgEl.className = 'form-msg'; }
     modal.classList.remove('hidden');
   }
 
@@ -512,7 +533,7 @@
     api('/api/cards').then(function (data) {
       const c = (data.cards || []).find(function (x) { return x.id === id; });
       if (!c) return;
-      $('#modal-title').textContent = '编辑卡片';
+      $('#modal-title').textContent = t('modal.editTitle');
       $('#f-id').value = c.id;
       $('#f-alias').value = c.alias;
       $('#f-last4').value = c.last4;
@@ -520,7 +541,7 @@
       $('#f-billDay').value = c.billDay || '';
       $('#f-payDay').value = c.payDay;
       modal.classList.remove('hidden');
-    }).catch(function (e) { toast(e.message, true); });
+    }).catch(function (e) { toast(errMsg(e), true); });
   }
 
   function closeModal() {
@@ -555,13 +576,41 @@
       closeModal();
       loadCards();
     } catch (e) {
-      if (msgEl) { msgEl.textContent = e.message; msgEl.className = 'form-msg err'; }
-      else { toast(e.message, true); }
+      if (msgEl) { msgEl.textContent = errMsg(e); msgEl.className = 'form-msg err'; }
+      else { toast(errMsg(e), true); }
+    }
+  });
+
+  // ---------- 语言切换 ----------
+  function syncLangButtons() {
+    const cur = I18N.get();
+    document.querySelectorAll('.lang-btn').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-lang') === cur);
+    });
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      I18N.set(btn.getAttribute('data-lang'));
+    });
+  });
+
+  // 切换语言后：静态文案已由 I18N 翻译，这里重渲染所有动态内容
+  I18N.onChange(function () {
+    syncLangButtons();
+    if (modal && !modal.classList.contains('hidden')) {
+      $('#modal-title').textContent = t(editingId ? 'modal.editTitle' : 'modal.addTitle');
+    }
+    if (AccountAuth.isLoggedIn()) {
+      loadCards();
+      if (!$('#records-panel').classList.contains('hidden')) loadRepayments();
     }
   });
 
   // ---------- 初始化 ----------
   (async function init() {
+    I18N.applyStatic(document);
+    syncLangButtons();
     if (!AccountAuth.isLoggedIn()) { showLogin(); return; }
     try {
       const me = await AccountAuth.me();

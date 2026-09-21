@@ -9,15 +9,17 @@ function dateStrToTs(s) {
 export async function onRequest(context) {
   const { request, env, params } = context;
   if (request.method === 'OPTIONS') return handleOptions();
-  if (request.method !== 'POST') return json({ ok: false, error: 'method not allowed' }, 405);
+  if (request.method !== 'POST') {
+    return json({ ok: false, error: 'method_not_allowed', message: '不支持的请求方法' }, 405);
+  }
 
   const sess = await resolveSession(request, env);
-  if (!sess) return json({ ok: false, error: 'unauthorized' }, 401);
+  if (!sess) return json({ ok: false, error: 'unauthorized', message: '请先登录' }, 401);
 
   const id = params.id;
   const cards = await getCards(env, sess.email);
   const idx = cards.findIndex((c) => c.id === id);
-  if (idx === -1) return json({ ok: false, error: 'card not found' }, 404);
+  if (idx === -1) return json({ ok: false, error: 'card_not_found', message: '卡片不存在' }, 404);
 
   const base = today();
   const card = cards[idx];
