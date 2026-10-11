@@ -21,3 +21,4 @@ gen-icons.mjs
 verify-i18n.mjs
 verify-overflow.mjs
 shot-i18n.mjs
+verify-skip.mjs

@@ -31,7 +31,11 @@ export async function onRequest(context) {
       createdAt: old.createdAt,
       updatedAt: Date.now()
     };
-    // 还款日变更后，重新初始化「最近一期已还」标记
+    // validateCard 返回的 lastPaidDue 恒为 null（那是「新建卡片」的默认值），
+    // 编辑时必须保留已有的还款指针，否则「本期已还 / 本期无需还」推进过的期数会被重置，
+    // 已经处理过的账单又被提醒一次。
+    merged.lastPaidDue = old.lastPaidDue || null;
+    // 还款日变更后，旧指针不再对应任何一期，重新初始化为「最近一期已还」
     if (v.value.payDay !== old.payDay) {
       merged.lastPaidDue = tsToDateStr(prevDue(v.value.payDay, today()));
     }

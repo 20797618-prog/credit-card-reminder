@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#111827">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- 用 default 而非 black-translucent：black-translucent 会让页面内容延伸到状态栏/刘海下方，
+       iPhone 上顶部的页头（退出、语言切换）会被状态栏盖住，看起来"被隐藏"且点不到。
+       default 让内容从状态栏下方开始，页头完整可见、状态栏文字对比度也正常。 -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="还款提醒">
   <title>信用卡还款提醒</title>
   <link rel="icon" type="image/png" href="/icons/icon-192.png">

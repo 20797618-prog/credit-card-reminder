@@ -128,6 +128,47 @@ export async function saveCards(env, email, cards) {
   await env.CARDS_KV.put(CARDS_PREFIX + email, JSON.stringify(cards));
 }
 
+// ---------- 本期操作（已还 / 无需还） ----------
+
+// 把卡片推进一期：lastPaidDue 指向「当前应还日」，倒计时自然滚到下一期。
+// 返回 { dueDate, actionDate }
+export function advanceCycle(card, base) {
+  const lastTs = card.lastPaidDue
+    ? dateStrToTs(card.lastPaidDue)
+    : prevDue(card.payDay, base); // 兜底：异常数据按「最近一期已还」处理
+  const next = nextDueAfter(card.payDay, lastTs);
+  const dueDate = tsToDateStr(next);      // 本期应还日
+  const actionDate = tsToDateStr(base);   // 操作发生日（已还 = 实际还款日；无需还 = 标记日）
+  card.lastPaidDue = dueDate;
+  return { dueDate, actionDate };
+}
+
+// 追加一条本期处理记录。同一应还日只记一次。
+// type: 'paid'（本期已还）| 'skip'（本期无需还）
+// paidAt 沿用原字段名，语义为「该次操作的日期」，兼容既有记录与筛选逻辑。
+export function appendHistory(card, dueDate, actionDate, type) {
+  if (!Array.isArray(card.paidHistory)) card.paidHistory = [];
+  const exists = card.paidHistory.some((h) => h && h.dueDate === dueDate);
+  if (!exists) card.paidHistory.push({ dueDate, paidAt: actionDate, type });
+  return !exists;
+}
+
+// 本期操作的完整业务逻辑（供 /paid 与 /skip 两个接口共用）
+// 返回 { card } 或 { error, code, status }
+export async function applyCycleAction(env, email, cardId, type, base) {
+  const cards = await getCards(env, email);
+  const idx = cards.findIndex((c) => c.id === cardId);
+  if (idx === -1) return { error: '卡片不存在', code: 'card_not_found', status: 404 };
+
+  const card = cards[idx];
+  const { dueDate, actionDate } = advanceCycle(card, base);
+  appendHistory(card, dueDate, actionDate, type);
+  card.updatedAt = Date.now();
+  await saveCards(env, email, cards);
+
+  return { card: { ...card, ...computeStatus(card, base) } };
+}
+
 // ---------- 字段校验 ----------
 
 // 返回 { error, code } 或 { value }

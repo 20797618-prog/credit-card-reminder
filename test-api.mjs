@@ -90,6 +90,49 @@ async function main() {
   })).json();
   check('非法字段被拒绝', bad.ok === false && !!bad.error, JSON.stringify(bad));
 
+  // 12. 本期无需还 + 记录类型（独立账号，避免干扰上面的计数）
+  const email2 = 'skip-' + Date.now() + '@example.com';
+  const rc2 = await (await fetch(BASE + '/api/auth/request-code', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email2 })
+  })).json();
+  const tok2 = (await (await fetch(BASE + '/api/auth/verify-code', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email2, code: rc2.code })
+  })).json()).token;
+  const auth2 = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok2 };
+
+  const c2 = (await (await fetch(BASE + '/api/cards', {
+    method: 'POST', headers: auth2,
+    body: JSON.stringify({ alias: '中信白金', last4: '8888', bank: '中信银行', payDay: 10 })
+  })).json()).card;
+  const dueBefore = c2.nextDueDate;
+
+  const skip = await (await fetch(BASE + '/api/cards/' + c2.id + '/skip', { method: 'POST', headers: auth2 })).json();
+  console.log('      → 无需还后状态:', JSON.stringify({ status: skip.card.status, nextDueDate: skip.card.nextDueDate }));
+  check('无需还成功且滚到下期', skip.ok === true && skip.card.status === 'normal' && skip.card.nextDueDate !== dueBefore,
+    dueBefore + ' -> ' + (skip.card && skip.card.nextDueDate));
+
+  const reps2 = await (await fetch(BASE + '/api/repayments', { headers: auth2 })).json();
+  const r2 = reps2.records && reps2.records[0];
+  check('无需还写入记录且 type=skip',
+    reps2.ok === true && reps2.records.length === 1 && r2.type === 'skip' && r2.dueDate === skip.card.lastPaidDue,
+    JSON.stringify(reps2.records));
+
+  // 13. 回归：编辑卡片（不改还款日）不应重置还款指针
+  const edit2 = await (await fetch(BASE + '/api/cards/' + c2.id, {
+    method: 'PUT', headers: auth2,
+    body: JSON.stringify({ alias: '中信白金', last4: '8888', bank: '中信银行', payDay: 10 })
+  })).json();
+  check('编辑不改还款日时保留还款指针',
+    edit2.ok === true && edit2.card.lastPaidDue === skip.card.lastPaidDue && edit2.card.nextDueDate === skip.card.nextDueDate,
+    JSON.stringify({ lastPaidDue: edit2.card.lastPaidDue, nextDueDate: edit2.card.nextDueDate }));
+
+  // 14. 两种记录类型可区分
+  const paid2 = await (await fetch(BASE + '/api/cards/' + c2.id + '/paid', { method: 'POST', headers: auth2 })).json();
+  const reps3 = await (await fetch(BASE + '/api/repayments', { headers: auth2 })).json();
+  const types = (reps3.records || []).map((x) => x.type).sort();
+  check('已还/无需还两种记录并存且可区分',
+    paid2.ok === true && types.join(',') === 'paid,skip', JSON.stringify(types));
+
   console.log('\n结果：' + pass + ' 通过，' + fail + ' 失败');
   if (fail > 0) process.exit(1);
 }

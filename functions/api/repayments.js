@@ -25,7 +25,8 @@ export async function onRequest(context) {
         last4: c.last4,
         bank: c.bank || null,
         dueDate: h.dueDate,   // 应还日 YYYY-MM-DD
-        paidAt: h.paidAt || h.dueDate // 实际还款日（老数据兜底用应还日）
+        paidAt: h.paidAt || h.dueDate, // 该次操作的日期（老数据兜底用应还日）
+        type: h.type === 'skip' ? 'skip' : 'paid' // 老数据无 type，按「已还」处理
       });
     }
   }

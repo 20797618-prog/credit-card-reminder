@@ -201,10 +201,11 @@
     return { num: n, unit: tp('countdown.unit', n) };
   }
 
-  // 三枚操作按钮（两方案共用）
+  // 本期操作按钮（两方案共用）：已还 / 无需还 / 编辑 / 删除
   function cardActionsHtml(c) {
     return '<div class="card-actions">' +
       '<button class="btn-paid" data-act="paid" data-id="' + c.id + '">' + t('card.actionPaid') + '</button>' +
+      '<button class="btn-skip" data-act="skip" data-id="' + c.id + '">' + t('card.actionSkip') + '</button>' +
       '<button class="btn-mini" data-act="edit" data-id="' + c.id + '">' + t('card.actionEdit') + '</button>' +
       '<button class="btn-mini danger" data-act="del" data-id="' + c.id + '">' + t('card.actionDelete') + '</button>' +
     '</div>';
@@ -332,19 +333,38 @@
     }
   }
 
-  // 事件委托：已还 / 编辑 / 删除
+  // 本期操作进行中：禁用卡片按钮，避免连点两次把还款指针推进两期
+  // （推进两期 = 白跳过一整期，等于漏掉一次提醒，所以必须挡住）
+  let cycleBusy = false;
+  function setActionsDisabled(on) {
+    document.querySelectorAll('#card-list button[data-act]').forEach(function (b) {
+      b.disabled = !!on;
+    });
+  }
+
+  // 事件委托：已还 / 无需还 / 编辑 / 删除
   $('#card-list').addEventListener('click', async function (ev) {
     const btn = ev.target.closest('button[data-act]');
     if (!btn) return;
     const act = btn.getAttribute('data-act');
     const id = btn.getAttribute('data-id');
 
-    if (act === 'paid') {
+    if (act === 'paid' || act === 'skip') {
+      if (cycleBusy) return;
+      cycleBusy = true;
+      setActionsDisabled(true);
       try {
-        await api('/api/cards/' + id + '/paid', { method: 'POST' });
-        toast(t('toast.paidRecorded'));
-        loadCards();
-      } catch (e) { toast(errMsg(e), true); }
+        await api('/api/cards/' + id + '/' + act, { method: 'POST' });
+        toast(t(act === 'skip' ? 'toast.skipped' : 'toast.paidRecorded'));
+        await loadCards();
+      } catch (e) {
+        toast(errMsg(e), true);
+      } finally {
+        // loadCards 已重新渲染则会作用在新节点上（本来就是可用状态）；
+        // 若列表未刷新，这里兜底恢复，避免按钮永久变灰。
+        cycleBusy = false;
+        setActionsDisabled(false);
+      }
     } else if (act === 'edit') {
       openEdit(id);
     } else if (act === 'del') {
@@ -464,18 +484,23 @@
     }
     emptyEl.classList.add('hidden');
     listEl.innerHTML = list.map(function (r) {
+      const isSkip = r.type === 'skip';
       const bank = r.bank ? '<span class="record-bank">' + escapeHtml(r.bank) + '</span>' : '';
+      const tag = '<span class="record-tag ' + (isSkip ? 'skip' : 'paid') + '">' +
+        t(isSkip ? 'record.typeSkip' : 'record.typePaid') + '</span>';
       return '' +
         '<div class="record">' +
           '<div class="record-head">' +
-            '<span class="record-alias">' + escapeHtml(r.alias) + '</span>' +
+            '<span class="record-title">' +
+              '<span class="record-alias">' + escapeHtml(r.alias) + '</span>' + tag +
+            '</span>' +
             '<span class="record-sub">' + bank +
               '<span>' + t('record.ending', { n: escapeHtml(r.last4) }) + '</span></span>' +
           '</div>' +
           '<div class="record-body">' +
             '<div class="record-line"><span>' + t('record.dueDate') + '</span><b>' +
               I18N.date(r.dueDate) + '</b></div>' +
-            '<div class="record-line"><span>' + t('record.paidOn') + '</span><b>' +
+            '<div class="record-line"><span>' + t(isSkip ? 'record.markedOn' : 'record.paidOn') + '</span><b>' +
               I18N.date(r.paidAt) + '</b></div>' +
           '</div>' +
         '</div>';

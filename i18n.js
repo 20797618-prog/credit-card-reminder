@@ -64,7 +64,7 @@
       'empty.cards.title': '还没有信用卡',
       'empty.cards.desc': '点击「添加卡片」，录入还款日即可开始提醒',
       'empty.records.title': '还没有还款记录',
-      'empty.records.desc': '点卡片上的「本期已还」后，这里会记录每次还款',
+      'empty.records.desc': '在卡片上点「本期已还」或「本期无需还」后，这里会按应还日记录每一期',
 
       // 汇总
       'summary.overdue': '{n} 张已逾期',
@@ -78,6 +78,7 @@
       'card.monthlyOn': '每月 {d} 号',
       'card.period': '本期 {p}',
       'card.actionPaid': '本期已还',
+      'card.actionSkip': '本期无需还',
       'card.actionEdit': '编辑',
       'card.actionDelete': '删除',
       'card.confirmDelete': '确认删除',
@@ -96,6 +97,9 @@
       'record.ending': '尾号 {n}',
       'record.dueDate': '应还日',
       'record.paidOn': '还款日',
+      'record.markedOn': '标记日',
+      'record.typePaid': '已还',
+      'record.typeSkip': '无需还',
       'filter.allCards': '全部卡片',
       'filter.allYears': '全部年份',
       'filter.allMonths': '全部月份',
@@ -121,6 +125,7 @@
 
       // 提示
       'toast.paidRecorded': '已记录本期还款',
+      'toast.skipped': '已记录本期无需还款',
       'toast.deleted': '已删除',
 
       // 前端校验 / 通用错误
@@ -175,7 +180,7 @@
       'empty.cards.title': 'No cards yet',
       'empty.cards.desc': 'Tap “Add card” and enter your due date to start tracking.',
       'empty.records.title': 'No payments yet',
-      'empty.records.desc': 'Tap “Paid this cycle” on a card and every payment will show up here.',
+      'empty.records.desc': 'Use “Paid this cycle” or “No payment due” on a card, and every cycle will be logged here.',
 
       // Summary
       'summary.overdue.one': '1 card overdue',
@@ -191,6 +196,7 @@
       'card.monthlyOn': '{d} of each month',
       'card.period': '{p} cycle',
       'card.actionPaid': 'Paid this cycle',
+      'card.actionSkip': 'No payment due',
       'card.actionEdit': 'Edit',
       'card.actionDelete': 'Delete',
       'card.confirmDelete': 'Confirm',
@@ -213,6 +219,9 @@
       'record.ending': 'Ending {n}',
       'record.dueDate': 'Due date',
       'record.paidOn': 'Paid on',
+      'record.markedOn': 'Marked on',
+      'record.typePaid': 'Paid',
+      'record.typeSkip': 'No payment due',
       'filter.allCards': 'All cards',
       'filter.allYears': 'All years',
       'filter.allMonths': 'All months',
@@ -238,6 +247,7 @@
 
       // Toasts
       'toast.paidRecorded': 'Payment recorded',
+      'toast.skipped': 'Recorded — no payment due this cycle',
       'toast.deleted': 'Card deleted',
 
       // Client-side + generic errors

@@ -111,8 +111,8 @@ input::placeholder { color: var(--text-muted); }
 /* 登录页的语言切换固定在右上角 */
 #login-view > .lang-switch {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: calc(20px + env(safe-area-inset-top, 0px));
+  right: calc(20px + env(safe-area-inset-right, 0px));
 }
 
 .login-card {
@@ -170,6 +170,10 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
+  /* 安全区适配：刘海屏 / 灵动岛 / 横屏凹口。inset 为 0 时保持原间距不变。 */
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-left: calc(20px + env(safe-area-inset-left, 0px));
+  padding-right: calc(20px + env(safe-area-inset-right, 0px));
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -184,6 +188,10 @@ main {
   max-width: 640px;
   margin: 0 auto;
   padding: 24px 20px 60px;
+  /* 底部避开 Home 指示条；左右避开横屏凹口 */
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(20px + env(safe-area-inset-left, 0px));
+  padding-right: calc(20px + env(safe-area-inset-right, 0px));
 }
 
 .toolbar {
@@ -422,6 +430,17 @@ main {
 }
 .btn-paid:hover { color: var(--text); border-color: var(--text-muted); }
 
+/* 本期无需还：与「本期已还」同外观（用户要求按钮字体统一为灰，不用彩色） */
+.btn-skip {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: normal;
+}
+.btn-skip:hover { color: var(--text); border-color: var(--text-muted); }
+
 .btn-mini {
   background: transparent;
   color: var(--text-muted);
@@ -486,7 +505,22 @@ main {
   margin-bottom: 10px;
 }
 .record-alias { font-size: 15px; font-weight: 600; }
+.record-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .record-sub { color: var(--text-muted); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+
+/* 记录类型标签：已还 / 无需还 */
+.record-tag {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(100, 116, 139, 0.18);
+  color: var(--text-muted);
+}
+.record-tag.paid { background: rgba(34, 197, 94, 0.16); color: var(--c-paid); }
+.record-tag.skip { background: rgba(100, 116, 139, 0.2); color: var(--text-muted); }
 .record-body {
   display: flex;
   flex-direction: column;
@@ -554,13 +588,26 @@ main {
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 480px) {
-  header { padding: 12px 14px; }
+  header {
+    padding: 12px 14px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-left: calc(14px + env(safe-area-inset-left, 0px));
+    padding-right: calc(14px + env(safe-area-inset-right, 0px));
+  }
   #user-email { display: none; }
   .brand { font-size: 14px; }
   .user-box { gap: 8px; }
   .lang-btn { padding: 5px 8px; font-size: 11px; }
-  #login-view > .lang-switch { top: 14px; right: 14px; }
-  main { padding: 18px 14px 48px; }
+  #login-view > .lang-switch {
+    top: calc(14px + env(safe-area-inset-top, 0px));
+    right: calc(14px + env(safe-area-inset-right, 0px));
+  }
+  main {
+    padding: 18px 14px 48px;
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(14px + env(safe-area-inset-left, 0px));
+    padding-right: calc(14px + env(safe-area-inset-right, 0px));
+  }
   .toolbar { flex-wrap: wrap; }
   .card.style-a,
   .card.style-b { flex-direction: column; }
@@ -637,7 +684,7 @@ main {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 36px;
+  bottom: calc(36px + env(safe-area-inset-bottom, 0px));
   transform: translate(-50%, 16px);
   max-width: 82vw;
   padding: 10px 18px;
